@@ -14,6 +14,7 @@ clean_data$Time.Occurred= paste0(substr(clean_data$Time.Occurred,1,2),":",substr
 
 ### Format Date and Time
 library(lubridate)
+
 clean_data$Date.Reported=mdy(clean_data$Date.Reported)
 clean_data$Date.Occurred=mdy(clean_data$Date.Occurred)
 clean_data$Time.Occurred=hm(clean_data$Time.Occurred)
@@ -179,3 +180,22 @@ violent_data_time%>%
 violent_data%>%
   ggplot(aes(x = Victim.Age, fill = Victim.Sex))+
   geom_bar()
+
+
+### Chris' Part
+#Most dangerous USC neighborhoods by day of week
+USC +
+  stat_density2d(data=violent_data_USC,
+                 aes(x=Lon,y=Lat,
+                     fill=..level..,
+                     alpha=..level..),
+                 bins=5, geom="polygon")+
+  scale_fill_gradient(low="black",high="red")+
+  ggtitle("Most Dangerous USC Neighborhoods by Day of Week")+
+  theme(legend.position="None")+
+  facet_wrap(~Weekday, nrow = 2)
+##The red disctricts to the south side of USC are the most dangerous neighborhoods from Sunday to Saturday.
+##Wednesday seems particularly dangerous with an dense area of violent crimes. Dangerous areas seem to spread out on Sunday,
+##, Monday and Friday, and got concentrated on Tuesday, Wednesday, Thursday and Saturday.
+
+
