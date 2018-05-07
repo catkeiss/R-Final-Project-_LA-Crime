@@ -199,3 +199,104 @@ USC +
 ##, Monday and Friday, and got concentrated on Tuesday, Wednesday, Thursday and Saturday.
 
 
+### Parin's Part
+library(ggmap)
+
+library(lubridate)
+
+USC=qmap("University of Southern California",zoom=15,color="bw")
+
+Los_Angeles=qmap("Los Angeles",zoom=12,color="bw")
+
+
+
+USC_robbery = violent_data_USC %>%
+  
+  mutate(year = year(Date.Occurred)) %>%
+  
+  filter (Crime.Type == "Robbery")
+
+
+
+USC_robbery_2017 = USC_robbery %>%
+  
+  mutate(year = year(Date.Occurred)) %>%
+  
+  filter (year == "2017")
+
+
+
+USC_robbery_2013 = USC_robbery %>%
+  
+  mutate(year = year(Date.Occurred)) %>%
+  
+  filter (year == "2013")
+
+
+
+### Robberies in USC Area in 2017 (After fence was built around campus)
+
+USC+
+  
+  geom_bin2d(data=USC_robbery_2017,aes(x=Lon,y=Lat,fill=Crime.Category),
+             
+             color="red",size=0.01,bins=200,alpha=0.3)+
+  
+  scale_fill_manual(values=c("Robbery"="red"))+
+  
+  theme(legend.title=element_blank(),
+        
+        legend.position = "None")+
+  
+  ggtitle("Robberies around USC in 2017" )
+
+
+
+
+
+###Robberies in USC Area in 2013 (Prior to fence being built around campus)
+
+USC+
+  
+  geom_bin2d(data=USC_robbery_2013,aes(x=Lon,y=Lat,fill=Crime.Category),
+             
+             color="red",size=0.01,bins=200,alpha=0.3)+
+  
+  scale_fill_manual(values=c("Robbery"="red"))+
+  
+  theme(legend.title=element_blank(),
+        
+        legend.position = "None")+
+  
+  ggtitle("Robberies around USC in 2013")
+
+
+###Justine's Parts
+# We'd like to create a stacked bar chart showing a breakdown of Victim Age by Gender.
+# To do this, we first need to clean the violent_data set to remove all Victim Age information that is 
+# denoted by NA and Victim Sex information that is unknown or blank:
+
+clean_data_VA = violent_data%>%
+  filter(Victim.Age != "NA", Victim.Sex == c("M", "F"))
+
+# Now we can plot the data:
+
+clean_data_VA%>%
+  ggplot(aes(x = Victim.Age, 
+             fill = Victim.Sex))+
+  geom_bar(position = "dodge")+
+  scale_x_continuous(breaks = seq(0, 100, 5))+
+  scale_fill_manual(values = c("M"="lightblue", "F" = "hotpink"))+
+  ggtitle("Breakdown of Violent Crimes by Victim Age and Gender")+
+  xlab("Victim Age")+
+  ylab("")
+
+## We can see from this chart that males between 20-25 are the biggest victims of violent crimes.
+## However, Female and Male victims exhibit similar trends in terms of being victims of violent crimes
+## (i.e. the crime rates appear to be pretty consistent across both genders), indicating that citizens
+## age 18-25 were victims of violent crime in Los Angeles. 
+
+###Hannah's Parts
+
+
+
