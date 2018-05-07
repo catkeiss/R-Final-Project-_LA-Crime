@@ -83,7 +83,7 @@ USC_data%>%
   ggplot(aes(x=year(Date.Occurred),fill=Crime.Category))+
   geom_bar(position="fill")+
   scale_x_continuous(breaks=seq(2010,2017,1))+
-  ggtitle("Non-Violent v.s Violent Crimes around USC")+
+  ggtitle("Perecentage on Non-Violent v.s Violent Crimes around USC")+
   xlab("Year")+
   ylab("")+
   scale_fill_manual(values=c("Violent"="red","Non-Violent"="light blue"))+
@@ -149,7 +149,7 @@ violent_data_USC%>%
   ylab("")+
   theme(legend.title=element_blank())
 
-##USC: Percentage of each category each year 2010 - 2018
+##USC: Percentage of each category each year 2010 - 2017
 violent_data_USC%>%
   ggplot(aes(x=year(Date.Occurred),fill=Crime.Type))+
   geom_bar(position="fill")+
@@ -296,7 +296,131 @@ clean_data_VA%>%
 ## (i.e. the crime rates appear to be pretty consistent across both genders), indicating that citizens
 ## age 18-25 were victims of violent crime in Los Angeles. 
 
-###Hannah's Parts
+############# Hannah ########################
+## clean data with blank in race
+violent_data_race = violent_data[!(violent_data$Victim.Descent == ""),]
 
+## Adding category to combine in high level
+race_data = violent_data_race %>%
+  mutate(Race=ifelse(Victim.Descent %in% c("A", "C", "D", "F", "J", "K", "L", "V", "Z"),"Asian",
+                     ifelse(Victim.Descent %in% c("G", "I", "O", "P", "S", "U", "X"),"Other",
+                            ifelse(Victim.Descent %in% c("B"),"Black",
+                                   ifelse(Victim.Descent %in% c("H"),"Hispanic","White")))))
+
+## Separate Year from "Date Occurred" 
+race_data = separate(race_data, Date.Occurred, c("y", "m" ,"d"))
+
+race_data$Race = as.factor(race_data$Race)
+levels(race_data$Race) = c("Hispanic", "White", "Black", "Other", "Asian")    
+
+
+## 1. Total number of victims by sex and by race during year 2010 - 2017 : WOMEN
+library(ggplot2)
+library(gridExtra)
+
+### Filter data and level per race
+Women_Race = race_data%>%
+  filter(Victim.Sex == "F") 
+
+Women_Race$Race <- factor(Women_Race$Race,levels = c("Other","Hispanic","Asian","White","Black"))
+
+### Plotting victim's count per race
+ggplot(Women_Race, aes(fill = Race, x="")) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~y, nrow=4) +
+  coord_flip() +
+  ylab("No. of Occurence") +
+  xlab("Identified Victim's Race") +
+  ggtitle("Total number of victims by sex and by race during year 2010 - 2017 : Women") +
+  scale_fill_manual(limits =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    breaks =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    values = c("red", "navy", "blue","royalblue", "skyblue"))
+
+
+
+## 2. Total number of victims by sex and by race during year 2010 - 2017 : MEN
+### Filter data and level per race
+Men_Race = race_data%>%
+  filter(Victim.Sex == "M") 
+
+Men_Race$Race <- factor(Men_Race$Race,levels = c("Other","Hispanic","White","Asian","Black"))
+
+### Plotting victim's count per race
+ggplot(Men_Race, aes(fill = Race, x="")) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~y, nrow=4) +
+  coord_flip() +
+  ylab("No. of Occurence") +
+  xlab("Identified Victim's Race") +
+  ggtitle("Total number of victims by sex and by race during year 2010 - 2017 : Men") +
+  scale_fill_manual(limits =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    breaks =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    values = c("red", "navy", "blue","royalblue", "skyblue"))
+
+
+## 3. Trend per race during year 2010 - 2017
+race_data$Race <- factor(race_data$Race,levels = c("Other","Hispanic","Asian","White","Black"))
+
+ggplot(race_data, aes(x = y, fill = Race)) +
+  geom_bar() +
+  facet_wrap(~Race, nrow =8) +
+  xlab("Year") +
+  ylab("Counts") +
+  ggtitle("Trend of violent crimes by race during year 2010 - 2017") +
+  scale_fill_manual(limits =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    breaks =c("Black", "White", "Asian", "Hispanic", "Other"),
+                    values = c("red", "navy", "blue","royalblue", "skyblue"))
+
+
+
+
+
+#########Shiny Dashboard###########
+library(tidyr)
+shiny1=clean_data_VA%>%
+  group_by(Victim.Age,Victim.Sex)%>%
+  summarize(Count=n())%>%
+  spread(key=Victim.Sex,value=Count)
+
+
+library(shiny)
+
+ui <- fluidPage(title = "Violent Crimes in Los Angeles by Age and Gender",
+                windowTitle = "LA Crimes",
+                sidebarLayout(
+                  sidebarPanel(
+                    selectInput(inputId="selected_sex",
+                                label = "Choose a Gender to display",
+                                choices =c("Male",
+                                           "Female"))
+                  ),
+                  mainPanel(
+                    plotOutput(outputId = "barplot")
+                  )
+                )
+)
+
+server <- function(input, output) {
+  data = reactive({
+    data=shiny1
+  }) 
+  
+  gender = switch(input$selected_sex,
+                "Male"=shiny1()$M,
+                "Female" =shiny1()$F)
+  
+  output$barplot = renderPlot({
+    ggplot(data(),aes(x = Victim.Age, 
+                               fill = gender))+
+      geom_bar(position = "dodge")+
+      scale_x_continuous(breaks = seq(10, 100, 5))+
+      scale_fill_manual(values = c("M"="lightblue", "F" = "hotpink"))+
+      ggtitle("Breakdown of Violent Crimes by Victim Age and Gender")+
+      xlab("Victim Age")+
+      ylab("")
+  })
+}
+
+shinyApp(ui, server)
 
 
