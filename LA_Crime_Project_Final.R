@@ -112,7 +112,7 @@ violent_data=clean_data%>%
                                                        "CHILD ABUSE(PHYSICAL)-SIMPLE ASSAULT",
                                                        "OTHER ASSULT"),"Assult",
                            ifelse(Crime.Code.Description%in%c("ATTEMPTED ROBBERY","ROBBERY"),"Robbery",
-                                  ifelse(Crime.Code.Description%in%c("CRIMINAL HOMICIDE","MANSLAUGHTER,NEGLIGENT"),"Murder and Manslaughter","Rape"))))
+                                  ifelse(Crime.Code.Description%in%c("CRIMINAL HOMICIDE","MANSLAUGHTER,NEGLIGENT"),"Murder&Manslaughter","Rape"))))
 
 ## Violent crime data around USC
 violent_data_USC=violent_data%>%
@@ -170,7 +170,8 @@ violent_data_time%>%
   scale_y_continuous(breaks=seq(0,23,1))+
   xlab("")+
   ylab("")+
-  scale_fill_gradient(low="white", high="dark red")
+  scale_fill_gradient(low="white", high="dark red")+
+  ggtitle("Violent Crimes in LA Time and Day of Week between 2010 - 2017")
 #Violent crimes occur most often at night time around 20p.m. to 21p.m From Monday to Friday.
 #On weekend, the peak violent crime occurs more often around 1a.m.
 #In general, morning hour around 6a.m to 7a.m are the safest time.
