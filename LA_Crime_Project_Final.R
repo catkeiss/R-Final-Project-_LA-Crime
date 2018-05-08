@@ -297,15 +297,14 @@ clean_data_VA%>%
 ## age 18-25 were victims of violent crime in Los Angeles. 
 
 ############# Hannah ########################
-## clean data with blank in race
-violent_data_race = violent_data[!(violent_data$Victim.Descent == ""),]
-
-## Adding category to combine in high level
-race_data = violent_data_race %>%
+## clean data with blank in race, adding race category to combine in high level
+race_data = violent_data %>%
   mutate(Race=ifelse(Victim.Descent %in% c("A", "C", "D", "F", "J", "K", "L", "V", "Z"),"Asian",
                      ifelse(Victim.Descent %in% c("G", "I", "O", "P", "S", "U", "X"),"Other",
                             ifelse(Victim.Descent %in% c("B"),"Black",
-                                   ifelse(Victim.Descent %in% c("H"),"Hispanic","White")))))
+                                   ifelse(Victim.Descent %in% c("H"),"Hispanic",
+                                          ifelse(Victim.Descent %in% c("W"),"White","NA"))))))%>%
+  filter(Race!="NA")
 
 ## Separate Year from "Date Occurred" 
 race_data = separate(race_data, Date.Occurred, c("y", "m" ,"d"))
@@ -376,12 +375,6 @@ ggplot(race_data, aes(x = y, fill = Race)) +
 
 
 #########Shiny Dashboard###########
-library(tidyr)
-shiny1=clean_data_VA%>%
-  group_by(Victim.Age,Victim.Sex)%>%
-  summarize(Count=n())%>%
-  spread(key=Victim.Sex,value=Count)
-
 
 library(shiny)
 
@@ -392,7 +385,8 @@ ui <- fluidPage(title = "Violent Crimes in Los Angeles by Age and Gender",
                     selectInput(inputId="selected_sex",
                                 label = "Choose a Gender to display",
                                 choices =c("Male",
-                                           "Female"))
+                                           "Female"),
+                                selected="Female")
                   ),
                   mainPanel(
                     plotOutput(outputId = "barplot")
@@ -401,18 +395,23 @@ ui <- fluidPage(title = "Violent Crimes in Los Angeles by Age and Gender",
 )
 
 server <- function(input, output) {
-  data = reactive({
-    data=shiny1
+  shiny1 = reactive({
+    shiny1=clean_data_VA%>%
+      group_by(Victim.Age,Victim.Sex)%>%
+      summarize(Count=n())%>%
+      spread(key=Victim.Sex,value=Count)
   }) 
   
-  gender = switch(input$selected_sex,
-                "Male"=shiny1()$M,
-                "Female" =shiny1()$F)
   
   output$barplot = renderPlot({
-    ggplot(data(),aes(x = Victim.Age, 
-                               fill = gender))+
-      geom_bar(position = "dodge")+
+    
+    gender = switch(input$selected_sex,
+                    "Male"=shiny1()$M,
+                    "Female" =shiny1()$F)
+    
+    ggplot(shiny1(),aes(x = Victim.Age,y=gender 
+    ))+
+      geom_col(position = "dodge")+
       scale_x_continuous(breaks = seq(10, 100, 5))+
       scale_fill_manual(values = c("M"="lightblue", "F" = "hotpink"))+
       ggtitle("Breakdown of Violent Crimes by Victim Age and Gender")+
